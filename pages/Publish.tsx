@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import { CATEGORIES, STATES } from '../constants';
 import { Icon } from '../components/Icon';
 
@@ -6,7 +7,8 @@ interface PublishProps {
   onNavigate: (page: string) => void;
 }
 
-const Publish: React.FC<PublishProps> = ({ onNavigate }) => {
+// Named export for use in App.tsx
+export const Publish: React.FC<PublishProps> = ({ onNavigate }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     category: '',
@@ -159,4 +161,10 @@ const Publish: React.FC<PublishProps> = ({ onNavigate }) => {
   );
 };
 
-export default Publish;
+interface PageProps {
+  onNavigate: (page: string, params?: any) => void;
+}
+
+export default function PublishPage({ onNavigate }: PageProps) {
+  return <Publish onNavigate={onNavigate} />;
+}

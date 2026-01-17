@@ -1,5 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { MOCK_ADS } from '../constants';
 import { Ad } from '../types';
 import { Icon } from '../components/Icon';
@@ -9,12 +9,13 @@ interface DetailProps {
   id?: string;
 }
 
-const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
+// Named export for use in App.tsx
+export const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
   const [ad, setAd] = useState<Ad | null>(null);
   
   // Gallery State
-  const [galleryStartIndex, setGalleryStartIndex] = useState(0); // For Adult Strip
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0); // For Default Layout Main Image
+  const [galleryStartIndex, setGalleryStartIndex] = useState(0); 
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0); 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -22,35 +23,20 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
   const [viewersCount, setViewersCount] = useState(12);
 
   useEffect(() => {
-    // Simulate fetch logic
     const realId = id?.endsWith('-dup') ? id.replace(/-dup$/, '') : id;
     const found = MOCK_ADS.find(a => a.id === realId);
     if (found) {
       setAd(found);
       setGalleryStartIndex(0);
       setSelectedImageIndex(0);
-      // Random viewers for social proof effect
       setViewersCount(Math.floor(Math.random() * 20) + 5);
     }
   }, [id]);
 
   if (!ad) return <div className="p-20 text-center text-gray-500">Carregando anúncio...</div>;
 
-  // --- GALLERY LOGIC ---
   const images = ad.images && ad.images.length > 0 ? ad.images : [ad.image];
-  
-  // Adult specific strip logic
-  const handleNextGallery = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setGalleryStartIndex((prev) => (prev + 1) % images.length);
-  };
 
-  const handlePrevGallery = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setGalleryStartIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  // Default layout Main Image logic
   const handleNextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedImageIndex((prev) => (prev + 1) % images.length);
@@ -61,7 +47,18 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
     setSelectedImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
-  // Lightbox Logic
+  // Adult strip gallery
+  const handleNextGallery = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGalleryStartIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const handlePrevGallery = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGalleryStartIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  // Lightbox
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setIsLightboxOpen(true);
@@ -79,11 +76,9 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
 
   const closeLightbox = () => {
       setIsLightboxOpen(false);
-      // Sync back the main view to what was viewed in lightbox
       setSelectedImageIndex(lightboxIndex); 
   };
 
-  // Helper to get the 3 visible images for the adult strip
   const getVisibleImages = () => {
     const visible = [];
     for (let i = 0; i < 3; i++) {
@@ -92,7 +87,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
     return visible;
   };
 
-  // --- SHARED LIGHTBOX COMPONENT ---
   const renderLightbox = () => (
     isLightboxOpen && (
       <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center animate-fadeIn">
@@ -132,7 +126,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
               onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
               className={`w-16 h-16 md:w-20 md:h-20 shrink-0 cursor-pointer rounded-md overflow-hidden border-2 transition-all ${idx === lightboxIndex ? 'border-brand-red opacity-100' : 'border-transparent opacity-50 hover:opacity-100'}`}
             >
-              <img src={img} className="w-full h-full object-cover" />
+              <img src={img} className="w-full h-full object-cover" alt="" />
             </div>
           ))}
         </div>
@@ -140,7 +134,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
     )
   );
 
-  // --- ADULT PREMIUM LAYOUT (Dark Mode / Exclusive) ---
+  // --- ADULT PREMIUM LAYOUT (Luxury Red/White/Gold) ---
   if (ad.category === 'adultos' && ad.tier === 'premium') {
     return (
       <div className="bg-zinc-950 min-h-screen pb-24 font-sans text-gray-200">
@@ -158,12 +152,11 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
 
         {/* Hero Section */}
         <div className="relative">
-          {/* Main Hero Image - Cinematic Mode (Blurred BG + Contained Image) */}
           <div 
              className="w-full h-[60vh] md:h-[75vh] relative cursor-pointer group bg-zinc-900 overflow-hidden"
              onClick={() => openLightbox(selectedImageIndex)}
           >
-             {/* 1. BACKGROUND LAYER (Ambiance) */}
+             {/* 1. BACKGROUND LAYER */}
              <div className="absolute inset-0 z-0">
                 <img 
                   src={images[selectedImageIndex]} 
@@ -173,7 +166,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                 <div className="absolute inset-0 bg-black/30"></div>
              </div>
 
-             {/* 2. FOREGROUND LAYER (Full Image without cropping) */}
+             {/* 2. FOREGROUND LAYER */}
              <div className="absolute inset-0 z-10 flex items-center justify-center p-4 pb-20 md:pb-0">
                 <img 
                   src={images[selectedImageIndex]} 
@@ -184,8 +177,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
 
              {/* 3. OVERLAY GRADIENTS */}
              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-20 pointer-events-none"></div>
-             <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/50 via-transparent to-zinc-950/50 z-20 pointer-events-none md:hidden"></div>
-
+             
              {/* Exclusive Badge */}
              <div className="absolute top-4 left-4 z-30">
                 <span className="bg-gradient-to-r from-yellow-600 to-yellow-400 text-black font-bold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-yellow-500/20 flex items-center">
@@ -193,7 +185,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                 </span>
              </div>
 
-             {/* Gallery Navigation (Desktop) */}
+             {/* Gallery Navigation */}
              <div className="hidden md:flex absolute inset-0 items-center justify-between px-4 z-30 pointer-events-none">
                 <button onClick={handlePrevImage} className="pointer-events-auto bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-all border border-white/10 hover:border-white/30">
                    <Icon name="ChevronLeft" size={32} />
@@ -208,7 +200,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
           <div className="container mx-auto px-4 relative z-30 -mt-24 md:-mt-32 pointer-events-none">
              <div className="flex flex-col md:flex-row items-end md:items-start gap-6 pointer-events-auto">
                 
-                {/* Thumbnails (Desktop floating) */}
+                {/* Thumbnails */}
                 <div className="hidden md:flex flex-col gap-3 absolute left-4 bottom-8">
                    {images.slice(0, 4).map((img, idx) => (
                       <div 
@@ -216,7 +208,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                         onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(idx); }}
                         className={`w-16 h-16 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shadow-lg ${idx === selectedImageIndex ? 'border-yellow-500 scale-110' : 'border-zinc-700 hover:border-white'}`}
                       >
-                         <img src={img} className="w-full h-full object-cover" />
+                         <img src={img} className="w-full h-full object-cover" alt="" />
                       </div>
                    ))}
                 </div>
@@ -280,10 +272,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
         <div className="container mx-auto px-4 mt-12">
            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
               
-              {/* Left Content */}
               <div className="lg:col-span-8 space-y-12">
-                 
-                 {/* About */}
                  <div>
                     <h2 className="text-2xl text-white font-serif italic mb-6 flex items-center">
                        <span className="w-8 h-px bg-yellow-500 mr-4"></span>
@@ -296,7 +285,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                     </div>
                  </div>
 
-                 {/* Services */}
                  <div>
                     <h2 className="text-2xl text-white font-serif italic mb-6 flex items-center">
                        <span className="w-8 h-px bg-yellow-500 mr-4"></span>
@@ -316,7 +304,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                     </div>
                  </div>
 
-                 {/* Rates Table */}
                  {ad.rates && (
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden p-6">
                        <h3 className="text-xl text-white font-serif mb-6 text-center">Investimento</h3>
@@ -332,7 +319,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                  )}
               </div>
 
-              {/* Right Sidebar (Sticky) */}
               <div className="lg:col-span-4 hidden md:block">
                  <div className="sticky top-24 space-y-6">
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
@@ -378,11 +364,9 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
       <div className="bg-white min-h-screen font-sans">
         {renderLightbox()}
         
-        {/* PREMIUM HERO SECTION - Dark & Immersive */}
         <div className="bg-gray-900 text-white pb-12 pt-6">
           <div className="container mx-auto px-4">
             
-            {/* Top Bar: Breadcrumb + Social Proof */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
               <nav className="text-xs md:text-sm text-gray-400 flex items-center overflow-x-auto whitespace-nowrap">
                 <span onClick={() => onNavigate('home')} className="cursor-pointer hover:text-white transition-colors">Início</span>
@@ -397,10 +381,8 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
               </div>
             </div>
 
-            {/* Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
-              {/* Left: Gallery (Cinema Mode) */}
               <div className="lg:col-span-8">
                 <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl group border border-gray-700">
                    <img 
@@ -414,7 +396,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                       Oportunidade Premium
                    </div>
 
-                   {/* Nav Buttons */}
                    {images.length > 1 && (
                      <>
                         <button 
@@ -432,7 +413,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                      </>
                    )}
 
-                   {/* Thumbs Overlay */}
                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/40 backdrop-blur-md rounded-xl max-w-[90%] overflow-x-auto no-scrollbar">
                       {images.map((img, idx) => (
                         <div 
@@ -440,14 +420,13 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                           onClick={() => setSelectedImageIndex(idx)}
                           className={`w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${idx === selectedImageIndex ? 'border-brand-red opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
                         >
-                          <img src={img} className="w-full h-full object-cover" />
+                          <img src={img} className="w-full h-full object-cover" alt="" />
                         </div>
                       ))}
                    </div>
                 </div>
               </div>
 
-              {/* Right: Sticky Sales Box */}
               <div className="lg:col-span-4 relative">
                 <div className="lg:sticky lg:top-24 bg-white text-gray-900 rounded-xl shadow-2xl p-6 md:p-8 border-t-4 border-brand-red">
                    
@@ -475,7 +454,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                      </p>
                    </div>
 
-                   {/* CTAs - High Contrast */}
                    <div className="space-y-3">
                      <button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-lg font-bold py-4 rounded-xl shadow-lg transition-all transform hover:-translate-y-1 flex items-center justify-center animate-shimmer">
                        <Icon name="MessageCircle" className="mr-2" size={24} />
@@ -487,11 +465,10 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                      </button>
                    </div>
 
-                   {/* Seller Info */}
                    <div className="mt-8 pt-6 border-t border-gray-100">
                      <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden ring-2 ring-brand-red p-0.5">
-                           <img src="https://i.pravatar.cc/150?img=33" className="w-full h-full rounded-full object-cover" />
+                           <img src="https://i.pravatar.cc/150?img=33" className="w-full h-full rounded-full object-cover" alt="" />
                         </div>
                         <div>
                           <p className="font-bold text-gray-900 text-sm">Loja Oficial Premium</p>
@@ -513,12 +490,10 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
           </div>
         </div>
 
-        {/* DETAILS SECTION */}
         <div className="container mx-auto px-4 py-12">
            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-8">
                  
-                 {/* Feature Highlights Grid */}
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                     {Object.entries(ad.attributes).map(([key, value]) => (
                       <div key={key} className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center text-center hover:border-brand-red hover:shadow-md transition-all">
@@ -532,7 +507,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                     </div>
                  </div>
 
-                 {/* Description - Copywriting Style */}
                  <div className="mb-12">
                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
                      <span className="w-1.5 h-8 bg-brand-red rounded-full mr-3"></span>
@@ -555,7 +529,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                  </div>
               </div>
 
-              {/* Sidebar Content (Safety) */}
               <div className="lg:col-span-4 space-y-6">
                  <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
                     <h3 className="font-bold text-gray-900 mb-4 flex items-center">
@@ -581,7 +554,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
            </div>
         </div>
 
-        {/* Mobile Sticky CTA for Premium */}
         <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
            <div>
               <p className="text-xs text-gray-500 uppercase font-bold">Total à vista</p>
@@ -596,14 +568,13 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
     );
   }
 
-  // --- RENDER FOR ADULT CATEGORY (Standard/Highlight) ---
+  // --- STANDARD ADULT LAYOUT ---
   if (ad.category === 'adultos') {
     return (
       <div className="bg-gray-100 min-h-screen pb-24 md:pb-12 font-sans">
         
         {renderLightbox()}
 
-        {/* Mobile Sticky Action Bar */}
         <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 flex gap-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
            <button className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg flex items-center justify-center transition-colors">
               <Icon name="MessageCircle" size={20} className="mr-2" /> WhatsApp
@@ -615,7 +586,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
 
         <div className="container mx-auto px-4 pt-4 md:pt-6 max-w-7xl">
             
-            {/* Breadcrumb */}
             <nav className="text-sm text-gray-500 mb-4 flex items-center overflow-x-auto whitespace-nowrap pb-2">
                 <span onClick={() => onNavigate('home')} className="cursor-pointer hover:text-brand-red transition-colors">Início</span>
                 <Icon name="ChevronRight" size={14} className="mx-2 shrink-0" />
@@ -624,7 +594,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                 <span className="font-medium text-gray-900 truncate">{ad.title}</span>
             </nav>
 
-            {/* GALLERY STRIP - 3 IMAGES (Webmotors Style) */}
             <div className="relative group mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-2 h-72 md:h-96 overflow-hidden rounded-lg">
                     {getVisibleImages().map((img, idx) => {
@@ -640,12 +609,10 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                                   className="w-full h-full object-cover transition-transform duration-700 group-hover/image:scale-105" 
                                   alt=""
                               />
-                              {/* Overlay icon on hover */}
                               <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-all flex items-center justify-center">
                                   <Icon name="Search" className="text-white opacity-0 group-hover/image:opacity-100 transform scale-0 group-hover/image:scale-100 transition-all duration-300 drop-shadow-lg" size={40} />
                               </div>
                               
-                              {/* Badges (only on first image of strip) */}
                               {idx === 0 && (
                                   <div className="absolute top-4 left-4 flex flex-col gap-2">
                                       {ad.verified && (
@@ -660,7 +627,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                     })}
                 </div>
 
-                {/* Navigation Buttons (Overlapping the strip) */}
                 {images.length > 3 && (
                     <>
                         <button 
@@ -679,9 +645,7 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                 )}
             </div>
 
-            {/* MAIN CONTENT GRID */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* LEFT COLUMN */}
                 <div className="lg:col-span-8 space-y-8">
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                         <div className="flex justify-between items-start mb-2">
@@ -695,7 +659,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                                 <Icon name="Heart" size={28} />
                             </button>
                         </div>
-                        {/* Stats Grid */}
                         <div className="mt-6 border-t border-gray-100 pt-6">
                             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Detalhes</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -720,14 +683,13 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                             </div>
                         </div>
                     </div>
-                    {/* Description */}
+                    
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                         <h3 className="text-xl font-bold text-gray-900 mb-4">Sobre</h3>
                         <div className="prose prose-gray max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
                             {ad.description}
                         </div>
                     </div>
-                     {/* Rates */}
                      {ad.rates && (
                         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                             <h3 className="text-xl font-bold text-gray-900 mb-4">Valores</h3>
@@ -743,7 +705,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                     )}
                 </div>
 
-                {/* RIGHT COLUMN */}
                 <div className="lg:col-span-4">
                     <div className="sticky top-24 space-y-6">
                         <div className="bg-white rounded-lg shadow-card border border-gray-200 overflow-hidden">
@@ -772,13 +733,11 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
     );
   }
 
-  // --- DEFAULT LAYOUT (Standard Ads) ---
+  // --- STANDARD DEFAULT LAYOUT ---
   return (
-    <div className="bg-gray-50/50 min-h-screen pb-24 md:pb-12">
-      
+    <div className="bg-gray-50 min-h-screen pb-24 md:pb-12">
       {renderLightbox()}
 
-      {/* Mobile Sticky Action Bar */}
       <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 flex gap-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         <button className="flex-1 bg-green-500 text-white font-bold py-3 rounded-lg flex items-center justify-center">
           <Icon name="MessageCircle" size={20} className="mr-2" /> Chat
@@ -789,8 +748,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        
-        {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6 flex items-center overflow-x-auto whitespace-nowrap pb-2">
           <span onClick={() => onNavigate('home')} className="cursor-pointer hover:text-brand-red">Início</span>
           <Icon name="ChevronRight" size={14} className="mx-2 shrink-0" />
@@ -803,13 +760,9 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Main Column (Images + Desc) */}
           <div className="lg:col-span-8 space-y-6">
             
-            {/* Gallery Section */}
             <div className="bg-white rounded-2xl shadow-card overflow-hidden">
-              
-              {/* Main Image with Navigation Arrows */}
               <div 
                 className="relative aspect-video bg-black group cursor-pointer"
                 onClick={() => openLightbox(selectedImageIndex)}
@@ -820,17 +773,14 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                    className="w-full h-full object-contain" 
                  />
                  
-                 {/* Index Counter */}
                  <div className="absolute top-4 left-4 bg-black/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
                    {selectedImageIndex + 1} / {images.length}
                  </div>
                  
-                 {/* Zoom Indicator */}
                  <div className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm pointer-events-none">
                    <Icon name="Search" size={16} />
                  </div>
 
-                 {/* Navigation Arrows (On top of image) */}
                  {images.length > 1 && (
                    <>
                      <button 
@@ -849,7 +799,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                  )}
               </div>
               
-              {/* Thumbnail Strip (Updates Main Image) */}
               <div className="p-4 flex gap-2 overflow-x-auto scrollbar-hide">
                  {images.map((img, idx) => (
                    <div 
@@ -857,13 +806,12 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                      onClick={() => setSelectedImageIndex(idx)}
                      className={`w-20 h-20 shrink-0 rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${idx === selectedImageIndex ? 'border-brand-red opacity-100 ring-2 ring-red-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
                    >
-                     <img src={img} className="w-full h-full object-cover" />
+                     <img src={img} className="w-full h-full object-cover" alt="" />
                    </div>
                  ))}
               </div>
             </div>
 
-            {/* Main Info */}
             <div className="bg-white rounded-2xl shadow-card p-6 md:p-8">
               <div className="flex justify-between items-start mb-4">
                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight flex-1 mr-4">{ad.title}</h1>
@@ -899,7 +847,6 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
               </div>
             </div>
             
-            {/* Location Map Mock */}
             <div className="bg-white rounded-2xl shadow-card p-6">
                <h2 className="text-xl font-bold text-gray-900 mb-4">Localização</h2>
                <div className="aspect-[21/9] bg-gray-200 rounded-xl flex items-center justify-center relative overflow-hidden group">
@@ -907,18 +854,17 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
                      <Icon name="MapPin" size={32} className="mx-auto text-brand-red mb-2" />
                      <span className="font-semibold text-gray-700">{ad.location}</span>
                   </div>
-                  <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1000&q=80" className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale group-hover:grayscale-0 transition-all duration-700" />
+                  <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1000&q=80" className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
                </div>
             </div>
 
           </div>
 
-          {/* Sidebar (Seller Info & CTAs) */}
           <div className="lg:col-span-4 space-y-6">
              <div className="bg-white rounded-2xl shadow-card p-6 border border-gray-100">
                 <div className="flex items-center gap-4 mb-6">
                    <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden border-2 border-green-400 p-0.5">
-                      <img src="https://i.pravatar.cc/150?img=11" className="w-full h-full rounded-full object-cover" />
+                      <img src="https://i.pravatar.cc/150?img=11" className="w-full h-full rounded-full object-cover" alt="" />
                    </div>
                    <div>
                       <h3 className="font-bold text-lg text-gray-900">João da Silva</h3>
@@ -969,4 +915,16 @@ const Detail: React.FC<DetailProps> = ({ onNavigate, id }) => {
   );
 };
 
-export default Detail;
+interface PageProps {
+  onNavigate: (page: string, params?: any) => void;
+}
+
+export default function DetailPage({ onNavigate }: PageProps) {
+  const router = useRouter();
+  const { id } = router.query;
+  
+  // Ensure ID is a string
+  const adId = Array.isArray(id) ? id[0] : id;
+
+  return <Detail onNavigate={onNavigate} id={adId} />;
+}
