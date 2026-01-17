@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Ad } from '../types';
 import { Icon } from './Icon';
@@ -114,7 +113,7 @@ const AdCard: React.FC<AdCardProps> = ({ ad, onClick }) => {
 
            {/* Badges */}
            <div className="absolute top-3 left-3 flex flex-col gap-1 pointer-events-none">
-             {tier === 'premium' && (
+             {isAdultPremium && (
                <span className="bg-yellow-500 text-black border border-yellow-300 text-[10px] font-bold px-2 py-1 rounded shadow-lg uppercase flex items-center w-max tracking-wide">
                  <Icon name="Gem" size={10} className="mr-1 fill-black" /> LUXO
                </span>
@@ -142,23 +141,23 @@ const AdCard: React.FC<AdCardProps> = ({ ad, onClick }) => {
         </div>
 
         {/* Content Section - Respects Tier Coloring */}
-        <div className={`p-3 flex-grow ${isAdultPremium ? 'bg-zinc-900 text-white' : (tier === 'premium' ? 'bg-brand-red text-white' : '')}`}>
+        <div className={`p-3 flex-grow ${isAdultPremium ? 'bg-zinc-900 text-white' : ''}`}>
           <div className="flex justify-between items-start mb-1">
-             <h3 className={`text-lg font-extrabold leading-tight ${isAdultPremium ? 'text-yellow-50 font-serif tracking-wide' : (tier === 'premium' ? 'text-white' : 'text-gray-900 group-hover:text-brand-red')} transition-colors`}>
+             <h3 className={`text-lg font-extrabold leading-tight ${isAdultPremium ? 'text-yellow-50 font-serif tracking-wide' : 'text-gray-900 group-hover:text-brand-red'} transition-colors`}>
                {ad.title}
              </h3>
           </div>
           
-          <div className={`flex justify-between items-center text-xs mb-2 ${isAdultPremium ? 'text-zinc-400' : (tier === 'premium' ? 'text-white/80' : 'text-gray-500')}`}>
+          <div className={`flex justify-between items-center text-xs mb-2 ${isAdultPremium ? 'text-zinc-400' : 'text-gray-500'}`}>
              <span className="flex items-center truncate">
                <Icon name="MapPin" size={12} className="mr-1" /> {ad.location}
              </span>
              {ad.age && <span className="font-semibold">{ad.age} anos</span>}
           </div>
 
-          <div className={`border-t pt-2 mt-1 ${isAdultPremium ? 'border-yellow-500/20' : (tier === 'premium' ? 'border-white/20' : 'border-gray-100')}`}>
-             <p className={`text-[10px] uppercase tracking-wide ${isAdultPremium ? 'text-yellow-500/80' : (tier === 'premium' ? 'text-white/60' : 'text-gray-400')}`}>Cachê a partir de</p>
-             <div className={`text-xl font-extrabold ${isAdultPremium ? 'text-yellow-400' : (tier === 'premium' ? 'text-white' : 'text-brand-red')}`}>
+          <div className={`border-t pt-2 mt-1 ${isAdultPremium ? 'border-yellow-500/20' : 'border-gray-100'}`}>
+             <p className={`text-[10px] uppercase tracking-wide ${isAdultPremium ? 'text-yellow-500/80' : 'text-gray-400'}`}>Cachê a partir de</p>
+             <div className={`text-xl font-extrabold ${isAdultPremium ? 'text-yellow-400' : 'text-brand-red'}`}>
                {ad.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace('R$', 'R$ ')}
              </div>
           </div>
